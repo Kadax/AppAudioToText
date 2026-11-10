@@ -1,0 +1,445 @@
+﻿<Window x:Class="SpeechToText.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Аудио в текст"
+        Height="720"
+        Width="1080"
+        MinHeight="680"
+        MinWidth="940"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBackgroundBrush}"
+        FontFamily="{StaticResource AppFont}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        AllowDrop="True"
+        DragEnter="OnWindowDragOver"
+        DragOver="OnWindowDragOver"
+        DragLeave="OnWindowDragLeave"
+        Drop="OnWindowDrop"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True">
+
+    <Grid Margin="24,20,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="18" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Шапка -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Аудио в текст" Style="{StaticResource TitleTextStyle}" />
+            <TextBlock Margin="0,4,0,0"
+                       Style="{StaticResource SubtitleTextStyle}"
+                       Text="Загрузите аудиофайл или запишите речь с микрофона — сервис расшифрует её в текст." />
+        </StackPanel>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Левая карточка: источник аудио и история -->
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="20" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource SegmentContainerStyle}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <RadioButton Grid.Column="0"
+                                         Content="Файл"
+                                         GroupName="SourceMode"
+                                         Style="{StaticResource SegmentToggleStyle}"
+                                         IsChecked="{Binding Mode, Converter={StaticResource EnumToBool}, ConverterParameter=File, Mode=TwoWay}" />
+                            <RadioButton Grid.Column="1"
+                                         Content="Микрофон"
+                                         GroupName="SourceMode"
+                                         Style="{StaticResource SegmentToggleStyle}"
+                                         IsChecked="{Binding Mode, Converter={StaticResource EnumToBool}, ConverterParameter=Microphone, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Режим «Файл» -->
+                    <StackPanel Grid.Row="2" Visibility="{Binding IsFileMode, Converter={StaticResource BoolToVis}}">
+                        <Button Height="154"
+                                AutomationProperties.Name="Выбрать аудиофайл"
+                                Style="{StaticResource DropZoneButtonStyle}"
+                                Command="{Binding ChooseFileCommand}"
+                                Visibility="{Binding HasSelectedFile, Converter={StaticResource InverseBoolToVis}}">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Rectangle Width="4" Height="14" RadiusX="2" RadiusY="2" Margin="2,0"
+                                               VerticalAlignment="Center" Fill="{StaticResource AccentBrush}" Opacity="0.35" />
+                                    <Rectangle Width="4" Height="24" RadiusX="2" RadiusY="2" Margin="2,0"
+                                               VerticalAlignment="Center" Fill="{StaticResource AccentBrush}" Opacity="0.55" />
+                                    <Rectangle Width="4" Height="34" RadiusX="2" RadiusY="2" Margin="2,0"
+                                               VerticalAlignment="Center" Fill="{StaticResource AccentBrush}" />
+                                    <Rectangle Width="4" Height="22" RadiusX="2" RadiusY="2" Margin="2,0"
+                                               VerticalAlignment="Center" Fill="{StaticResource AccentBrush}" Opacity="0.7" />
+                                    <Rectangle Width="4" Height="16" RadiusX="2" RadiusY="2" Margin="2,0"
+                                               VerticalAlignment="Center" Fill="{StaticResource AccentBrush}" Opacity="0.45" />
+                                </StackPanel>
+                                <TextBlock Margin="0,12,0,0"
+                                           HorizontalAlignment="Center"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Text="Перетащите файл сюда" />
+                                <TextBlock Margin="0,4,0,0"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource CaptionTextStyle}"
+                                           Text="или нажмите, чтобы выбрать" />
+                                <TextBlock Margin="0,10,0,0"
+                                           HorizontalAlignment="Center"
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Text="WAV · MP3 · M4A · AAC · OGG · FLAC · WMA" />
+                            </StackPanel>
+                        </Button>
+
+                        <Border Visibility="{Binding HasSelectedFile, Converter={StaticResource BoolToVis}}"
+                                Background="{StaticResource SurfaceSubtleBrush}"
+                                BorderBrush="{StaticResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="14">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="38" Height="38" CornerRadius="9"
+                                            Background="{StaticResource AccentSoftBrush}"
+                                            VerticalAlignment="Top">
+                                        <Path Width="19" Height="19"
+                                              Stretch="Uniform"
+                                              Stroke="{StaticResource AccentBrush}"
+                                              StrokeThickness="1.6"
+                                              StrokeLineJoin="Round"
+                                              Data="M6,2 H14 L19,7 V20 A2,2 0 0 1 17,22 H6 A2,2 0 0 1 4,20 V4 A2,2 0 0 1 6,2 Z M14,2 V7 H19" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding FileName}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding SelectedFilePath}" />
+                                        <TextBlock Margin="0,3,0,0"
+                                                   Style="{StaticResource CaptionTextStyle}"
+                                                   Text="{Binding FileInfoText}" />
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                    <Button Content="Выбрать другой"
+                                            Height="32"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding ChooseFileCommand}"
+                                            Margin="0,0,8,0" />
+                                    <Button Content="Убрать"
+                                            Height="32"
+                                            Style="{StaticResource GhostButtonStyle}"
+                                            Command="{Binding ClearFileCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Режим «Микрофон» -->
+                    <StackPanel Grid.Row="2" Visibility="{Binding IsMicrophoneMode, Converter={StaticResource BoolToVis}}">
+                        <Grid>
+                            <TextBlock Text="Устройство записи" Style="{StaticResource FieldLabelTextStyle}" />
+                            <Button Content="Обновить"
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource LinkButtonStyle}"
+                                    Command="{Binding RefreshDevicesCommand}"
+                                    IsEnabled="{Binding IsRecording, Converter={StaticResource InverseBool}}" />
+                        </Grid>
+                        <ComboBox Margin="0,6,0,0"
+                                  Style="{StaticResource AppComboBoxStyle}"
+                                  ItemsSource="{Binding Devices}"
+                                  SelectedItem="{Binding SelectedDevice}"
+                                  DisplayMemberPath="Name"
+                                  IsEnabled="{Binding IsRecording, Converter={StaticResource InverseBool}}" />
+
+                        <Border Margin="0,12,0,0"
+                                Background="{StaticResource SurfaceSubtleBrush}"
+                                BorderBrush="{StaticResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource RecordButtonStyle}"
+                                            AutomationProperties.Name="Начать или остановить запись"
+                                            Command="{Binding ToggleRecordingCommand}"
+                                            ToolTip="Начать или остановить запись" />
+                                    <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding RecordingTimeText}"
+                                                   FontFamily="Consolas"
+                                                   FontSize="26"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Style="{StaticResource CaptionTextStyle}"
+                                                   Text="{Binding RecordingHintText}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Margin="0,12,0,0"
+                                           Style="{StaticResource CaptionTextStyle}"
+                                           Text="Уровень сигнала" />
+                                <ProgressBar Margin="0,6,0,0" Value="{Binding MicrophoneLevel}">
+                                    <ProgressBar.Style>
+                                        <Style TargetType="ProgressBar" BasedOn="{StaticResource LevelMeterStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMicLevelHigh}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsMicLevelClipping}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ProgressBar.Style>
+                                </ProgressBar>
+                                <Grid Margin="0,10,0,0"
+                                      Visibility="{Binding HasRecording, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding RecordedFileName}"
+                                               Margin="0,0,64,0"
+                                               VerticalAlignment="Center"
+                                               FontSize="11"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding RecordedFilePath}" />
+                                    <Button Content="Удалить"
+                                            HorizontalAlignment="Right"
+                                            Style="{StaticResource LinkButtonStyle}"
+                                            Command="{Binding ClearRecordingCommand}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <Button Grid.Row="4"
+                            Content="Распознать"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding RecognizeCommand}" />
+
+                    <Grid Grid.Row="6">
+                        <TextBlock Text="История" Style="{StaticResource SectionTitleTextStyle}" />
+                        <Button Content="Очистить"
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource LinkButtonStyle}"
+                                Command="{Binding ClearHistoryCommand}" />
+                    </Grid>
+
+                    <Grid Grid.Row="8">
+                        <ListBox Style="{StaticResource HistoryListStyle}"
+                                 ItemsSource="{Binding History}"
+                                 SelectedItem="{Binding SelectedHistoryItem}"
+                                 IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid>
+                                            <TextBlock Text="{Binding FileName}"
+                                                       FontSize="12.5"
+                                                       FontWeight="SemiBold"
+                                                       Margin="0,0,58,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding FilePath}" />
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <Ellipse Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,5,0">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsError}" Value="True">
+                                                                    <Setter Property="Fill" Value="{StaticResource ErrorBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <TextBlock Text="{Binding TimeText}"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Grid.Row="1"
+                                                   Margin="0,4,0,0"
+                                                   FontSize="11.5"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Text="{Binding Preview}"
+                                                   TextWrapping="Wrap"
+                                                   MaxHeight="30"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource EmptyStateTextStyle}"
+                                   Text="Пока нет распознаваний"
+                                   Visibility="{Binding HasHistory, Converter={StaticResource InverseBoolToVis}}" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Правая карточка: результат -->
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Результат"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                            <Border Margin="10,0,0,0"
+                                    Visibility="{Binding HasResult, Converter={StaticResource BoolToVis}}">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource BadgeStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsResultError}" Value="False">
+                                                <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsResultError}" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource ErrorSoftBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding ResultStateText}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource BadgeTextStyle}">
+                                            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsResultError}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Content="Копировать"
+                                    Height="34"
+                                    Margin="0,0,8,0"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding CopyCommand}" />
+                            <Button Content="Сохранить"
+                                    Height="34"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    ToolTip="Сохранить результат в текстовый файл (.txt)"
+                                    Command="{Binding SaveCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Grid.Row="2"
+                            Background="#FAFBFC"
+                            BorderBrush="{StaticResource DividerBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                        <Grid>
+                            <TextBox Style="{StaticResource ResultTextBoxStyle}"
+                                     Text="{Binding ResultText, Mode=OneWay}" />
+                            <TextBlock HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Margin="24"
+                                       Style="{StaticResource EmptyStateTextStyle}"
+                                       Text="Здесь появится распознанный текст"
+                                       IsHitTestVisible="False"
+                                       Visibility="{Binding HasResult, Converter={StaticResource InverseBoolToVis}}" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Row="4"
+                                Orientation="Horizontal"
+                                Visibility="{Binding HasResult, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Style="{StaticResource CaptionTextStyle}" Text="{Binding WordCountText}" />
+                        <TextBlock Margin="8,0" Style="{StaticResource CaptionTextStyle}" Text="·" />
+                        <TextBlock Style="{StaticResource CaptionTextStyle}" Text="{Binding CharCountText}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Строка состояния -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center">
+                <Ellipse.Style>
+                    <Style TargetType="Ellipse">
+                        <Setter Property="Fill" Value="{StaticResource IdleBrush}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding StatusKind}" Value="Busy">
+                                <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding StatusKind}" Value="Success">
+                                <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding StatusKind}" Value="Error">
+                                <Setter Property="Fill" Value="{StaticResource ErrorBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Ellipse.Style>
+            </Ellipse>
+
+            <TextBlock Grid.Column="1"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource CaptionTextStyle}"
+                       Text="{Binding StatusText}"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip="{Binding StatusText}" />
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource CaptionTextStyle}" Text="Сервис:" />
+                <TextBlock Margin="4,0,0,0"
+                           FontSize="12"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Text="{Binding ServiceUrl}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

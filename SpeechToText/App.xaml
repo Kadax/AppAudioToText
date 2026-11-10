@@ -1,0 +1,17 @@
+﻿<Application x:Class="SpeechToText.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:SpeechToText.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+            <converters:InverseBooleanConverter x:Key="InverseBool" />
+            <converters:EnumToBooleanConverter x:Key="EnumToBool" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
